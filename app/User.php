@@ -3,7 +3,6 @@
 namespace App;
 
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
@@ -16,7 +15,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password',
+        'email_token', 'email', 'password',
     ];
 
     /**
@@ -27,4 +26,32 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token',
     ];
+
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class, 'permission_user');
+    }
+
+    public function canDo($permission, $require = false)
+    {
+        if (is_array($permission)) {
+            foreach ($permission as $permName) {
+
+                $permName = $this->canDo($permName);
+                if ($permName && !$require) {
+                    return true;
+                } else if (!$permName && $require) {
+                    return false;
+                }
+            }
+            return $require;
+        } else {
+            foreach ($this->permissions as $perm) {
+                if (str_is($permission, $perm->name)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
 }

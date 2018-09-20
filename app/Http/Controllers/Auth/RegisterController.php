@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Jobs\SendVerificationEmail;
 use App\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
+use Illuminate\Http\Request;
+
+use Illuminate\Auth\Events\Registered;
 
 class RegisterController extends Controller
 {
@@ -28,7 +32,7 @@ class RegisterController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/home';
+    protected $redirectTo = '/';
 
     /**
      * Create a new controller instance.
@@ -49,7 +53,6 @@ class RegisterController extends Controller
     protected function validator(array $data)
     {
         return Validator::make($data, [
-            'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
         ]);
@@ -64,9 +67,35 @@ class RegisterController extends Controller
     protected function create(array $data)
     {
         return User::create([
-            'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            'email_token' => str_random(64),
         ]);
+    }
+
+    public function register(Request $request)
+    {
+        $this->validator($request->all())->validate();
+        event(new Registered($user = $this->create($request->all())));
+        dispatch(new SendVerificationEmail($user));
+        return view('auth.verify');
+    }
+
+    public function verify($token, Request $request)
+    {
+        $user = User::where('email_token',$token)->first();
+        if (!$user) {
+            return redirect()->route('resend_activation')->withErrors(['wrong'=>'wrong_token']);
+        }
+        if (1 == $user->verified) {
+            $request->session()->flash('status', 'You are already confirmed');
+            return view('auth.emailconfirm');
+        }
+        $user->verified = 1;
+        if($user->save()){
+            $request->session()->flash('status', 'Confirmed');
+            $this->guard()->login($user);
+            return view('auth.emailconfirm', ['status'=>'confirm']);
+        }
     }
 }

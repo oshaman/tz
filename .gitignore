@@ -1,7 +1,7 @@
 /node_modules
 /public/hot
 /public/storage
-/storage
+/storage/*.key
 /vendor
 /.idea
 /.vscode
@@ -12,8 +12,3 @@ npm-debug.log
 yarn-error.log
 .env
 .phpunit.result.cache
-.editorconfig
-.env.example
-artisan
-/tests
-/bootstrap
