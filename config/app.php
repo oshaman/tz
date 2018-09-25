@@ -163,6 +163,7 @@ return [
         Collective\Html\HtmlServiceProvider::class,
         Lavary\Menu\ServiceProvider::class,
         'Barryvdh\TranslationManager\ManagerServiceProvider',
+        App\Providers\ComposerServiceProvider::class,
     ],
 
     /*

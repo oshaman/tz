@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Auth;
 use App\Jobs\SendVerificationEmail;
 use App\User;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Http\Request;
@@ -47,7 +46,7 @@ class RegisterController extends Controller
     /**
      * Get a validator for an incoming registration request.
      *
-     * @param  array  $data
+     * @param  array $data
      * @return \Illuminate\Contracts\Validation\Validator
      */
     protected function validator(array $data)
@@ -61,16 +60,19 @@ class RegisterController extends Controller
     /**
      * Create a new user instance after a valid registration.
      *
-     * @param  array  $data
+     * @param  array $data
      * @return \App\User
      */
     protected function create(array $data)
     {
-        return User::create([
+        $user = User::create([
             'email' => $data['email'],
-            'password' => Hash::make($data['password']),
             'email_token' => str_random(64),
         ]);
+
+        $user->generatePassword($data['password']);
+
+        return $user;
     }
 
     public function register(Request $request)
@@ -83,19 +85,20 @@ class RegisterController extends Controller
 
     public function verify($token, Request $request)
     {
-        $user = User::where('email_token',$token)->first();
+        $user = User::where('email_token', $token)->first();
         if (!$user) {
-            return redirect()->route('resend_activation')->withErrors(['wrong'=>'wrong_token']);
+            return redirect()->route('resend_activation')->withErrors(['wrong' => 'wrong_token']);
         }
+
         if (1 == $user->verified) {
             $request->session()->flash('status', 'You are already confirmed');
             return view('auth.emailconfirm');
         }
         $user->verified = 1;
-        if($user->save()){
+        if ($user->save()) {
             $request->session()->flash('status', 'Confirmed');
             $this->guard()->login($user);
-            return view('auth.emailconfirm', ['status'=>'confirm']);
+            return view('auth.emailconfirm', ['status' => 'confirm']);
         }
     }
 }

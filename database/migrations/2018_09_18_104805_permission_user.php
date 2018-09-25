@@ -18,8 +18,8 @@ class PermissionUser extends Migration
             $table->integer('permission_id')->unsigned()->default(1);
             $table->integer('user_id')->unsigned();
 
-            $table->foreign('user_id')->references('id')->on('users');
-            $table->foreign('permission_id')->references('id')->on('permissions');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('permission_id')->references('id')->on('permissions')->onDelete('cascade');
         });
     }
 

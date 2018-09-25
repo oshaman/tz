@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
@@ -15,7 +16,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'email_token', 'email', 'password',
+        'email_token', 'email'
     ];
 
     /**
@@ -52,6 +53,49 @@ class User extends Authenticatable
                 }
             }
             return false;
+        }
+    }
+
+    public static function add($fields)
+    {
+        $user = new static;
+        $user->fill($fields);
+        $user->save();
+
+        return $user;
+    }
+
+    public function edit($fields)
+    {
+        $this->fill($fields);
+
+        $this->save();
+    }
+
+    public function remove()
+    {
+        $this->delete();
+    }
+
+    public function verifyUser()
+    {
+        $this->verified = 1;
+        $this->save();
+    }
+
+    public function setPermissions($ids)
+    {
+//        if($ids == null){return;}
+
+        $this->permissions()->sync($ids);
+    }
+
+    public function generatePassword($password)
+    {
+        if($password != null)
+        {
+            $this->password = Hash::make($password);
+            $this->save();
         }
     }
 }

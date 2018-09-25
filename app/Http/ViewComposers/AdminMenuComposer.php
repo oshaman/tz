@@ -7,9 +7,14 @@
  */
 
 namespace App\Http\ViewComposers;
-
+use App\Http\Controllers\Admin\AdminController;
+use Illuminate\View\View;
 
 class AdminMenuComposer
 {
+    public function compose(View $view): void
+    {
+        $view->with('navigation', AdminController::getMenu());
+    }
 
 }

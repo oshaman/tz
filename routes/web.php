@@ -8,12 +8,8 @@ Route::prefix('admin')
         ->namespace('Admin')
         ->group(function () {
             Route::get('/', 'IndexController@show')->name('index');
+            Route::resource('users', 'UsersController');
         });
-
-
-
-
-
 
 Auth::routes();
 
